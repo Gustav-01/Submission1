@@ -63,7 +63,7 @@ public class Guesser{
     reply = input.nextLine();
 
     while (!reply.equals("T") && !reply.equals("F")) {
-        System.out.println("Please answer T or F:");
+        System.out.println("Please answer T for true, and F for false:");
         reply = input.nextLine();
     }
     return reply;  
