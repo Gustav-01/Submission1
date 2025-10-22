@@ -1,0 +1,147 @@
+﻿Gustav Olsson - jag siktar på VG! 
+
+
+1. Push och pull används som kommandon i bash när vi vill sammankoppla våra ändringar som görs i lokala eller remotea repositories. Push används med git push för att skicka en commit från lokalt repository till ett remote repository. Pull används när vi istället vill hämta ändringar som ligger på remote repository till lokalt repository. 
+2. Log och status är andra kommandon i bash som vi använder med git för att hålla koll på vad som händer i ett projekt. Vi använder git log för att visa commit-historiken som en lista där vi kan se våra senaste commits och vad som har ändrats. Git status är ett annat kommando för att visa statusen i stageing area. Här se vi vilka filer som vi behöver hantera, vilka som behöver committas, eller vilka vi behöver addera till våran repository. Vi ser alltså statusen för de olika filerna i den nuvarande katalogen. 
+3. En git branch är en slags förgrening i vårt git repository. Vi kan arbeta på olika branches när vi vill arbeta på olika delar av ett projekt. På en specifik branch kan jag spara ändringar, dvs. commit, utan att ändra filen lokalt. Vi skapar alltså en version/kopia av filen som sparas som en commit i den specifika branchen. Vi kan ha ett flertal olika branches men samtidigt arbeta med samma fil. Lyckas vi däremot göra ändringar på samma rad i filen kommer det att uppstå en konfilkt när vi ska merga. Vi behöver således se över ändringarna och manuellt välja vilka ändringar vi bör fastställa. De är därav viktiga då de ger oss möjligheten att arbeta med samma filer samtidigt, utan att förstöra för varandra i gruppen. 
+
+
+4. Det finns flera sätt att rulla tillbaka ändringar i Git. Vi har läst om git restore, git reset & git revert. Nedan följer en detaljerad beskrivning av samtliga (med test.txt som exempel): 
+
+
+Git restore använder vi när vi behöver ångra ändringar i filer innan commit. Det kan vara en fil som tidigare är commitad men som vi nu gör ändringar i. Vi vill ångra dessa ändringar innan vi har adderat filen till stageing area. Vi använder då git restore test.txt och ändringarna i filen är numera borttagna, stageing area är också rensad, git status visar “On branch master, nothing to commit, working tree clean”. Har vi däremot redan adderat filen till stageing area behöver vi ange git restore –staged test.txt för att ta bort filen från stageing area, men då behåller vi ändringarna lokalt i filen. Filen väntar alltså på att commitas. Vid git status → 
+
+
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   test.txt
+Git reset går att kombinera med olika förlängningar beroende på vad vi vill göra. Git reset –soft, git reset –mixed (standard) eller git reset –hard. 
+
+
+git reset --soft <commit-id> eller HEAD~nr,  tar oss tillbaka till en tidigare commit men behåller både ändringarna och staging area. Det är som att säga “jag ångrar commiten, men jag vill fortfarande ha kvar filerna som de är, och redo att committas”. Git status visar då → 
+
+
+Changes to be committed:
+  modified:   test.txt
+
+
+git reset --mixed <commit-id> eller HEAD~nr är standard. Det tar bort commits och rensar stageing area, men behåller ändringarna i filerna. Det är som att säga “ta bort commiten och ta bort staging, men låt ändringarna i filen vara kvar”. Git status visar då → 
+
+
+Changes not staged for commit:
+  modified:   test.txt
+
+
+git reset --hard <commit-id> eller HEAD~nr tar bort både commits, stageing area och ändringar i filerna. Allting rullas tillbaka till exakt det läget som det var i den tidigare versionen av filen. Git status visar då →
+
+
+On branch master
+nothing to commit, working tree clean
+
+
+Denna bör användas med försiktighet då samtliga ändringar är permanenta. 
+
+
+Git revert använder vi när vi vill ångra en commit utan att radera den från historiken. Git skapar då en ny commit som placeras som HEAD~1. Det här är ett säkrare sätt att backa ändringar då historiken inte förstörs (bara ändras) git revert ger oss en tidigare commit som HEAD~1 utan att rensa den senaste versionen av filen. Vi kör då git log –oneline (enklast) → 
+
+
+f3c9d12 (exempel) Revert "Specialmeddelande"
+b3a8c55 (exempel) “Specialmeddelande
+
+
+Git merge & rebase
+
+
+Git merge och git rebase är två olika sätt att kombinera ändringar från olika branches i Git. Båda används när man arbetar med flera feature branches och vill föra med sig kod tillbaka till ens main/master-branch.
+Git merge slår ihop ändringar från två brancher och skapar en merge commit i den branchen man står i. Det bevarar historiken från båda brancherna och visar att de kan fortsätta parallellt. 
+Git rebase flyttar commits från den aktuella branchens position till toppen av en annan branch, t.ex. main. Det innebär att Git skapar nya commits som baseras på de commits vi tar med oss, men med en ny bas.
+Skillnaden ligger i hur Git hanterar historiken: merge bevarar alla förgreningar och skapar EN ny commit, medan rebase slår samman commitsen till en rak linje. 
+
+
+Om vi skapar ett repo med två eller flera feature branches kan det se ut såhär: 
+
+
+git init 
+git switch -c feature1 
+git switch -c feature2
+
+
+Skulle det uppstå konflikter beror detta på att vi arbetar i samma fil och samma rad. Vilket är helt okej, om vi säkerställer att vi arbetar på olika branches. Det är då möjligt att ändra varje fil, på vilket sätt vi nu än önskar. Detta bör dock göras med försiktighet, då våra ändringar kan skapa problem när vi senare vill merga våra brancher, dvs. merge conflict. Vi möts då av ett felmeddelande som talar om för oss att vi har en konflikt och i vilken fil konflikten har uppstått. Felmeddelandet kan se ut något i stil med (Hello.java som exempel): 
+
+
+Auto-merging Hello.java
+CONFLICT (content): Merge conflict in Hello.java
+Automatic merge failed; fix conflicts and then commit the result.
+
+
+Vad gör vi? Vi ser till att öppna filen i main (om det är där vi står när vi mergar) och ändra i filen. Filen kan se ut något i stil med: 
+
+
+<<<<<<< HEAD
+Hello, changes here
+=======
+Hello, hello again
+
+
+>>>>>>> feature1
+
+
+Då ser vi till att ta bort all information rörande konflikten och välja den rad som vi vill använda i koden. Vi kan tydligt se här att det finns två olika versioner av filen, det är alltså två personer som har gjort ändringar i samma rad. Vi behöver därefter köra: 
+
+
+git add Hello.java
+git commit -m “message” 
+
+
+Historiken kan efter konflikten se ut på följande sätt: 
+
+
+94cadfa (HEAD -> main) Added Hello.java and solved conflict
+3c0ab6c Changes in Hello.java
+461529f (feature1) Changes in Hello.java
+
+
+Och filen: 
+
+
+Hello, changes here
+
+
+För rebase kan det se ut på följande sätt: 
+
+
+Vi ändrar filen Hello.java i samma rad men vi gör detta i feature1 och i main. Två olika ändringar i två olika brancher - inga problem! Men när vi försöker köra git rebase feature1 kommer det att dyka upp ett felmeddelande som skiljer sig från merge. Det kan se ut på liknande sätt: 
+
+
+error: could not apply 3c0ab6c... Changes in Hello.java
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply 3c0ab6c... Changes in Hello.java
+
+
+Vad gör vi? 
+Vi ändrar i filen på samma sätt som vid merge conflict, dvs. ta bort all onödig information och bestäm vilken rad vi vill spara. Sedan kör vi: 
+
+
+git add Hello.java
+git rebase –continue
+
+
+Vi har nu en ny historik, vilket vi kan se nedan.
+
+
+6942a58 (HEAD) Changes in Hello.java
+4b64679 (feature1) Changes to create conflict in Hello.java
+461529f Changes in Hello.java
+5f84bc9 (feature2) Added Hello.java
+
+
+När ska vi använda rebase och när ska vi använda merge? 
+
+
+Git rebase är bra att använda när vi vill få till en renare historik. Varför? För att den gör historiken rak och lätt att följa, vid en rebase placeras ovanpå den senaste versionen av den branch jag jobbar på. Lättast att använda denna när vi arbetar ensamma på ett projekt. Det kan också bli en hel del commits i branchen om vi rebasar konstant. 
+Merge är bättre att använda vid samarbete med andra, då en merge inte ändrar historiken på något sätt utan enbart tillsätter en ny commit s.k merge commit ovanpå den senaste versionen i den branch du mergar ifrån. Den visar också när en merge är gjort, vilket är fördelaktigt. Den är bra att använda när man vill slå ihop färdiga features till en. Eller rättare sagt, olika versioner/nya versioner av en fil som är färdigarbetad.
